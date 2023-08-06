@@ -22,4 +22,7 @@
 
 <resources>
     <string name="app_name">PearBridge</string>
+
+    <string name="disconnect">Disconnect</string>
+    <string name="unknown">Unknown</string>
 </resources>
