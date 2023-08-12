@@ -61,6 +61,15 @@ import timber.log.Timber
 class MainActivity : ComponentActivity() {
     private var bluetoothPeripheral: BluetoothPeripheral? by mutableStateOf(null)
     private val bluetoothPeripheralViewModel: BluetoothPeripheralViewModelImpl by viewModels()
+    private val bluetoothPeripheralSelectedListener = object : BluetoothPeripheralSelectedListener {
+        override fun onBluetoothPeripheralSelected(peripheral: BluetoothPeripheral) {
+            bluetoothPeripheral = peripheral
+        }
+
+        override fun onBluetoothPeripheralUnselected() {
+            bluetoothPeripheral = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
