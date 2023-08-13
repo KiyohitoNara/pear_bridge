@@ -23,6 +23,7 @@
 <resources>
     <string name="app_name">PearBridge</string>
 
+    <string name="connecting_to_peripheral">connecting to %1$s.</string>
     <string name="disconnect">Disconnect</string>
     <string name="unknown">Unknown</string>
 </resources>

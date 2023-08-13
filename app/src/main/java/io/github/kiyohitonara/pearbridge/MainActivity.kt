@@ -23,9 +23,13 @@
 package io.github.kiyohitonara.pearbridge
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -49,6 +53,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +76,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as ConnectingService.LocalBinder
+
+            val mainService = binder.getService()
+            mainService.setBluetoothPeripheralSelectedListener(bluetoothPeripheralSelectedListener)
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            bluetoothPeripheral = null
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -86,6 +104,9 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         requestPermission()
+
+        val intent = Intent(this, ConnectingService::class.java)
+        bindService(intent, connection, Application.BIND_AUTO_CREATE)
     }
 
     private fun requestPermission() {
@@ -115,11 +136,18 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 0)
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+
+        unbindService(connection)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BluetoothPeripheralsListScreen(peripheral: BluetoothPeripheral?, viewModel: BluetoothPeripheralViewModel) {
+    val context = LocalContext.current
     val peripherals by viewModel.peripherals.collectAsState()
 
     Scaffold(
@@ -148,6 +176,9 @@ fun BluetoothPeripheralsListScreen(peripheral: BluetoothPeripheral?, viewModel: 
                             selected = it == peripheral,
                             role = Role.RadioButton,
                             onClick = {
+                                val intent = Intent(context, ConnectingService::class.java)
+                                intent.putExtra(ConnectingService.EXTRA_PERIPHERAL, it)
+                                context.startService(intent)
                             },
                         )
                         .padding(horizontal = 16.dp),
@@ -175,6 +206,8 @@ fun BluetoothPeripheralsListScreen(peripheral: BluetoothPeripheral?, viewModel: 
                             selected = peripheral == null,
                             role = Role.RadioButton,
                             onClick = {
+                                val intent = Intent(context, ConnectingService::class.java)
+                                context.startService(intent)
                             },
                         )
                         .padding(horizontal = 16.dp),

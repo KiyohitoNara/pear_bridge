@@ -22,7 +22,9 @@
 
 package io.github.kiyohitonara.pearbridge
 
+import java.io.Serializable
+
 data class BluetoothPeripheral(
     val name: String,
     val address: String
-)
+) : Serializable
